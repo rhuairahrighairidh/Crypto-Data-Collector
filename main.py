@@ -1,6 +1,7 @@
 import ccxt as ccxt
 import os
 import sqlalchemy as sql
+from sqlalchemy.sql import text
 import time
 import logging
 
@@ -34,63 +35,51 @@ def getTrades(exchange, marketSymbol):
     return sorted(trades, key=lambda x: x['timestamp'])
     
 def writeOrderBook(eng,orderBook,exchange,market,poll_number):
+    orders = []
     for (amount, price) in orderBook["bids"]:
-        eng.execute("""INSERT INTO {tableName} VALUES ({poll_number},
-                                                       {timestamp},
-                                                       '{exchange}',
-                                                       '{symbol}',
-                                                       '{side}',
-                                                       {amount},
-                                                       {price})""".format(tableName="orderbook",
-                                                                      poll_number=poll_number,
-                                                                      timestamp=orderBook["timestamp"],
-                                                                      exchange=exchange.name,
-                                                                      symbol=market,
-                                                                      side="bid",
-                                                                      amount=amount,
-                                                                      price=price))
-
+        o = {'poll_number': poll_number,
+             'timestamp': orderBook['timestamp'],
+             'exchange': exchange.name,
+             'symbol': market,
+             'side': 'bid',
+             'amount': amount,
+             'price': price}
+        orders.append(o)
     for (amount, price) in orderBook["asks"]:
-        eng.execute("""INSERT INTO {tableName} VALUES ({poll_number},
-                                                       {timestamp},
-                                                       '{exchange}',
-                                                       '{symbol}',
-                                                       '{side}',
-                                                       {amount},
-                                                       {price})""".format(tableName="orderbook",
-                                                                      poll_number=poll_number,
-                                                                      timestamp=orderBook["timestamp"],
-                                                                      exchange=exchange.name,
-                                                                      symbol=market,
-                                                                      side="ask",
-                                                                      amount=amount,
-                                                                      price=price))
+        o = {'poll_number': poll_number,
+             'timestamp': orderBook['timestamp'],
+             'exchange': exchange.name,
+             'symbol': market,
+             'side': 'ask',
+             'amount': amount,
+             'price': price}
+        orders.append(o)
+    
+    eng.execute(text("""INSERT INTO orderbook VALUES (:poll_number,
+                                                      :timestamp,
+                                                      :exchange,
+                                                      :symbol,
+                                                      :side,
+                                                      :amount,
+                                                      :price);"""), orders)
+
 def writeTrades(eng,trades,exchange,poll_number):
+    trades_processed = []
     for t in trades:
-        for i in t:
-            if t[i] == None:
-                t[i]=""
-    for t in trades:
-        eng.execute("""
-            INSERT INTO {tableName} VALUES ({poll_number},
-                                            {timestamp},
-                                            '{exchange}',
-                                            {amount},
-                                            '{exid}',
-                                            {price},
-                                            '{side}',
-                                            '{symbol}',
-                                            '{type}')
-            ON CONFLICT DO NOTHING;""".format(tableName="trades",
-                                              poll_number=poll_number,
-                                              timestamp=t["timestamp"],
-                                              exchange=exchange.name,
-                                              amount=t["amount"],
-                                              exid=t["id"],
-                                              price=t["price"],
-                                              side=t["side"],
-                                              symbol=t["symbol"],
-                                              type=t["type"]))
+        t['poll_number']=poll_number
+        t['exchange']=exchange.name
+        t['exid'] = t['id']
+        trades_processed.append(t)
+    
+    eng.execute(text("""INSERT INTO trades VALUES (:poll_number,
+                                                   :timestamp,
+                                                   :exchange,
+                                                   :amount,
+                                                   :exid,
+                                                   :price,
+                                                   :side,
+                                                   :symbol,
+                                                   :type) ON CONFLICT DO NOTHING;"""), trades_processed)
     
 def main():
     logging.basicConfig(level=LOG_LEVEL)
@@ -114,8 +103,9 @@ def main():
 
         for e in exchanges:
             for m in MARKET_SYMBOLS:
-                writeOrderBook(eng,orderBooks[e.name][m],e,m,p)
-                logging.debug("wrote orderbook for {} on {}".format(m,e.name))
+                if orderBooks[e.name][m] != None:
+                    writeOrderBook(eng,orderBooks[e.name][m],e,m,p)
+                    logging.debug("wrote orderbook for {} on {}".format(m,e.name))
 
     
         if p%TRADES_POLL_PERIOD_MULTIPLIER == 0:
@@ -128,8 +118,9 @@ def main():
             
             for e in exchanges:
                 for m in MARKET_SYMBOLS:
-                    writeTrades(eng,trades[e.name][m],e,p)
-                    logging.debug("wrote trades for {} on {}".format(m,e.name))
+                    if trades[e.name][m] != None:
+                        writeTrades(eng,trades[e.name][m],e,p)
+                        logging.debug("wrote trades for {} on {}".format(m,e.name))
 
         waitTime = t+POLL_PERIOD-time.time()
         logging.info("Finished poll loop {}. Sleeping {:.2f}s".format(p,waitTime))
