@@ -103,7 +103,7 @@ def main():
     p = last_poll_number+1
     while True:
         t = time.time()
-        logger.debug("started poll loop {}".format(p))
+        logging.debug("started poll loop {}".format(p))
 
         orderBooks = {}
         for e in exchanges:
