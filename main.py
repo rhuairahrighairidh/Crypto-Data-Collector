@@ -103,6 +103,7 @@ def main():
     p = last_poll_number+1
     while True:
         t = time.time()
+        logger.debug("started poll loop {}".format(p))
 
         orderBooks = {}
         for e in exchanges:
@@ -114,6 +115,7 @@ def main():
         for e in exchanges:
             for m in MARKET_SYMBOLS:
                 writeOrderBook(eng,orderBooks[e.name][m],e,m,p)
+                logging.debug("wrote orderbook for {} on {}".format(m,e.name))
 
     
         if p%TRADES_POLL_PERIOD_MULTIPLIER == 0:
@@ -127,6 +129,7 @@ def main():
             for e in exchanges:
                 for m in MARKET_SYMBOLS:
                     writeTrades(eng,trades[e.name][m],e,p)
+                    logging.debug("wrote trades for {} on {}".format(m,e.name))
 
         waitTime = t+POLL_PERIOD-time.time()
         logging.info("Finished poll loop {}. Sleeping {:.2f}s".format(p,waitTime))
