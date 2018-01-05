@@ -4,13 +4,13 @@ import sqlalchemy as sql
 import time
 import logging
 
-API_REPEATS = int(os.environ["REPEAT"])
+API_REPEATS = int(os.environ["API_REPEATS"])
 MARKET_SYMBOLS = os.environ["MARKET_SYMBOLS"].split(",")
 EXCHANGES = os.environ["EXCHANGES"].split(",")
 DATABASE_URL = os.environ["DATABASE_URL"]
 LOG_LEVEL = os.environ["LOG_LEVEL"]
 POLL_PERIOD = int(os.environ["POLL_PERIOD"])
-TRADES_POLL_PERIOD_MULTIPLIER = 1
+TRADES_POLL_PERIOD_MULTIPLIER = 10
 
 def initiateExchange(exchangeName):
     return getattr(ccxt, exchangeName)()
