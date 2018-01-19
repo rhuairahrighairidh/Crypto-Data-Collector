@@ -36,7 +36,7 @@ def getTrades(exchange, marketSymbol):
     
 def writeOrderBook(eng,orderBook,exchange,market,poll_number):
     orders = []
-    for (amount, price) in orderBook["bids"]:
+    for (price, amount) in orderBook["bids"]:
         o = {'poll_number': poll_number,
              'timestamp': orderBook['timestamp'],
              'exchange': exchange.name,
@@ -45,7 +45,7 @@ def writeOrderBook(eng,orderBook,exchange,market,poll_number):
              'amount': amount,
              'price': price}
         orders.append(o)
-    for (amount, price) in orderBook["asks"]:
+    for (price, amount) in orderBook["asks"]:
         o = {'poll_number': poll_number,
              'timestamp': orderBook['timestamp'],
              'exchange': exchange.name,
