@@ -14,3 +14,4 @@ sqlalchemy = "*"
 
 [dev-packages]
 
+pandas = "*"
