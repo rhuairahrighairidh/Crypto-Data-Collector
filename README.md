@@ -9,4 +9,4 @@ Assorted scripts for fetching data are in `scripts/`.
 
 Dependencies managed with pipenv.
 
-On Heroku the env `SCRIPT` indicates what script to run. All other envs are script specific. Use the `worker`
+On Heroku the env `SCRIPT` indicates what script to run. All other envs are script specific. Use the `worker` process to run on heroku.
