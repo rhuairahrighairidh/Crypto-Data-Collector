@@ -4,6 +4,7 @@ import logging as lg # TODO add nicer logs
 
 import cryptoscrape as cs
 
+lg.basicConfig(level="INFO")
 
 DATABASE_URL = os.environ['DATABASE_URL']
 EXCHANGES = os.environ['EXCHANGES'].split(',')
@@ -33,7 +34,7 @@ db_session = cs.init_db(DATABASE_URL, cs.data.Base, wipe_existing=True)
 # Seems a bit more like what ORM is meant to be like.
 
 from sqlalchemy.sql.expression import func
-last_loop_index = db_session.query(func.max(TestTicker.loop_index)).scalar()
+last_loop_index = db_session.query(func.max(Ticker.loop_index)).scalar()
 if last_loop_index == None:
     last_loop_index = -1
 
@@ -48,7 +49,7 @@ def run(loop_index):
     
     # Process data
     data = cs.drop_errors_from_dict(data)
-    data_objects = [TestTicker.create_from_ticker(data[(e,m)],e,m,loop_index) for (e,m) in data]
+    data_objects = [Ticker.create_from_ticker(data[(e,m)],e,m,loop_index) for (e,m) in data]
     
     # write to DB.
     cs.commit_all(data_objects, db_session)
