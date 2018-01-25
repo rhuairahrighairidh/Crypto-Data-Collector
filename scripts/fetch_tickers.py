@@ -17,8 +17,8 @@ markets = cs.load_all_markets(exchange_objects) # return [(exchange_name, market
 
 #from ..cryptoscrape.data_formats import Base, Tick
 from sqlalchemy import Column, String
-class TestTicker(cs.data.Ticker):
-    __tablename__ = 'test_table'
+class Ticker(cs.data.Ticker):
+    __tablename__ = 'tickers_2017_01_25'
     
 
 db_session = cs.init_db(DATABASE_URL, cs.data.Base, wipe_existing=True)
