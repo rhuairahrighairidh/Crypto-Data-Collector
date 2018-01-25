@@ -9,7 +9,7 @@ from sqlalchemy import Column, Integer, BigInteger, String, Boolean, DateTime, F
 
 class Order(Base):
     __abstract__ = True # I think this is overwritten automatically when subclassed
-    #__tablename__ = # subclass this class and add tablename
+    #__tablename__ = # Subclass this class and add tablename. Valid names are lowercase letters, numbers and underscores, not starting with a number.
     id = Column(Integer, primary_key=True)
     loop_index = Column(Integer)
     amount = Column(Float)
