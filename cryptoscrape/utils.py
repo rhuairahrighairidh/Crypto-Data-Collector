@@ -4,7 +4,7 @@ import asyncio
 import ccxt
 import ccxt.async as accxt
 
-from sqlalchemy import create_engine
+import sqlalchemy as sql
 from sqlalchemy.orm import sessionmaker
 
 
@@ -118,7 +118,7 @@ async def fetch_data_for_markets(exchange_method, markets, exchange_objects, sem
 ### DATABASE #########################################
 
 def init_db(db_url, Base, wipe_existing=False): # Pass in declarative base.
-    engine = create_engine(db_url, echo=False)
+    engine = sql.create_engine(db_url, echo=False)
 
     # TODO Do proper db migrations.
     # If table already exists, then this just silently doesn't issue a CREATE TABLE command.
@@ -127,12 +127,19 @@ def init_db(db_url, Base, wipe_existing=False): # Pass in declarative base.
     if wipe_existing:
         # DANGER ZONE - Any tables in Base.metadata that already exist will be dropped.
         new_table_names = list(Base.metadata.tables.keys())
+        print(new_table_names)
         # Load existing tables.
-        Base.metadata.reflect(engine)
-        existing_table_names = list(Base.metadata.tables.keys())
+        inspector = sql.inspect(engine)
+        existing_table_names = inspector.get_table_names()
+        print(existing_table_names)
         
         conflicting_table_names = [t for t in new_table_names if t in existing_table_names]
+        print(conflicting_table_names)
         
+        # Add exisint tables to metadata.
+        Base.metadata.reflect(engine)
+        
+        # Drop conflicting tables.
         for t in conflicting_table_names:
             Base.metadata.tables[t].drop(engine)
     
